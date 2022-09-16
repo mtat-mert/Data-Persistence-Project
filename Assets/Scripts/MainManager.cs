@@ -3,17 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
+using System;
 
 public class MainManager : MonoBehaviour
 {
     public Brick BrickPrefab;
     public int LineCount = 6;
     public Rigidbody Ball;
-
     public Text ScoreText;
+    public Text highScoreText;
     public GameObject GameOverText;
+    public bool data_recorded;
     
     private bool m_Started = false;
+
     private int m_Points;
     
     private bool m_GameOver = false;
@@ -22,6 +26,14 @@ public class MainManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        try
+        {
+            SetHighScore();
+        }
+        catch
+        {
+
+        }
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -36,7 +48,10 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+
+        
     }
+
 
     private void Update()
     {
@@ -45,7 +60,7 @@ public class MainManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 m_Started = true;
-                float randomDirection = Random.Range(-1.0f, 1.0f);
+                float randomDirection = UnityEngine.Random.Range(-1.0f, 1.0f);
                 Vector3 forceDir = new Vector3(randomDirection, 1, 0);
                 forceDir.Normalize();
 
@@ -55,8 +70,16 @@ public class MainManager : MonoBehaviour
         }
         else if (m_GameOver)
         {
+            if (!data_recorded)
+            {
+                SaveData.Instance.SetScore(SaveData.Instance.playerName, m_Points);
+                data_recorded =! data_recorded;
+            }
+            
             if (Input.GetKeyDown(KeyCode.Space))
             {
+                SetHighScore();
+                data_recorded = !data_recorded;
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
         }
@@ -73,4 +96,13 @@ public class MainManager : MonoBehaviour
         m_GameOver = true;
         GameOverText.SetActive(true);
     }
+    public void SetHighScore()
+    {
+        highScoreText.text = "Best Score: " + SaveData.Instance.highScorePlayerName + ": " + SaveData.Instance.playerScore;
+    }
+    public void BackToMenu()
+    {
+        SceneManager.LoadScene(0);
+    }
+
 }
